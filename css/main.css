@@ -1,0 +1,276 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: #11131e;
+}
+
+body, .container, .videoControls, .vidTimers, .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 90%;
+    user-select: none;
+    overflow: hidden;
+    max-width: 900px;
+    border-radius: 5px;
+    background: #111111;
+    aspect-ratio: 16 / 9;
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* applies when fullscreen is enabled(clicked) */
+.container.fullscreen {
+    max-width: 100%;
+    width: 100%;
+    height: 100vh;
+    border-radius: 0px;
+}
+
+.videoPlayerFrame {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    opacity: 0;
+    bottom: -15px;
+    transition: all 0.08s ease;
+}
+
+.container.showControls .videoPlayerFrame {
+    opacity: 1;
+    bottom: 0;
+    transition: all 0.13s ease;
+}
+
+.videoPlayerFrame::before {
+    content: "";
+    bottom: 0;
+    width: 100%;
+    z-index: -1;
+    position: absolute;
+    height: calc(100% + 35px);
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.videoTimeline {
+    height: 7px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.videoTimeline .progressArea {
+    height: 3px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.progressArea span {
+    position: absolute;
+    left: 50%;
+    top: -25px;
+    font-size: 13px;
+    color: #ffffff;
+    pointer-events: none;
+    transform: translateX(-50%);
+}
+
+.progressArea .progressBar {
+    width: 0%;
+    height: 100%;
+    position: relative;
+    background: #2289ff;
+}
+
+.progressBar::before {
+    content: "";
+    right: 0;
+    top: 50%;
+    height: 13px;
+    width: 13px;
+    position: absolute;
+    border-radius: 50%;
+    background: #2289ff;
+    transform: translateY(-50%);
+}
+
+.progressBar::before, .progressArea span {
+    display: none;
+}
+
+.videoTimeline:hover .progressBar::before,
+.videoTimeline:hover .progressArea span {
+    display: block;
+}
+
+.videoPlayerFrame .videoControls {
+    padding: 5px 20px 10px;
+}
+
+.videoControls .controls {
+    width: 100%;
+}
+
+.videoControls .controls:first-child {
+    justify-content: flex-start;
+}
+
+.videoControls .controls:last-child {
+    justify-content: flex-end;
+}
+
+.controls button {
+    height: 40px;
+    width: 40px;
+    font-size: 19px;
+    border: none;
+    cursor: pointer;
+    background: none;
+    color: #efefef;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.controls button :where(i, span) {
+    color: #ffffff;
+}
+
+.controls button:active :where(i, span) {
+    transform: scale((0.9));
+}
+
+.controls button span {
+    font-size: 23px;
+}
+
+.controls input {
+    height: 4px;
+    margin-left: 3px;
+    max-width: 75px;
+    accent-color: #0078ff;
+}
+
+.controls .vidTimers {
+    color: #efefef;
+    margin-left: 15px;
+    font-size: 14px;
+}
+
+.vidTimers .separator {
+    margin: 0 5px;
+    font-size: 16px;
+    font-family: "Open sans", sans-serif;
+}
+
+.mediaControls {
+    display: flex;
+    position: relative;
+}
+
+.mediaControls .speedOptions {
+    position: absolute;
+    list-style: none;
+    left: -40px;
+    bottom: 40px;
+    width: 95px;
+    overflow: hidden;
+    opacity: 0;
+    border-radius: 4px;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.13s ease;
+}
+
+.mediaControls .speedOptions.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.speedOptions li {
+    cursor: pointer;
+    color: #000000;
+    font-size: 14px;
+    margin: 20px 0;
+    padding: 5px 0 5px 15px;
+    transition: all 0.1s ease;
+}
+
+.speedOptions li:where(:first-child, :last-child) {
+    margin: 0px;
+}
+
+.speedOptions li:hover {
+    background: #dfdfdf;
+}
+
+.speedOptions li.active {
+    color: #ffffff;
+    background: #3e97fd;
+}
+
+.container video {
+    width: 100%;
+}
+
+@media screen and (max-width: 540px) {
+    .videoPlayerFrame .videoControls {
+        padding: 3px 10px 7px;
+    }
+
+    .controls input, .progressArea span {
+        display: none !important;
+    }
+
+    .controls button {
+        height: 30px;
+        width: 30px;
+        font-size: 17px;
+    }
+
+    .controls .vidTimers {
+        margin-left: 5px;
+    }
+
+    .vidTimers .separator {
+        font-size: 14px;
+        margin: 0 2px;
+    }
+    
+    .controls button :where(i, span) {
+        line-height: 30px;
+    }
+
+    .controls button span {
+        font-size: 21px
+    }
+
+    .controls .vidTimers, .progressArea span, .speedOptions li {
+        font-size: 12px;
+    }
+
+    .mediaControls .speedOptions {
+        width: 75px;
+        left: -30px;
+        bottom: 30px;
+    }
+
+    .speedOptions li {
+        margin: 1px 0;
+        padding: 3px 0 3px 10px;
+    }
+
+    .right .picInPic {
+        display: none;
+    }
+}
