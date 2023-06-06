@@ -1,133 +1,140 @@
 // Video controls
-let videoMedia = document.querySelector("video");
-let seekControl = document.getElementById("videoSeek");
-let currentTime = document.getElementById("currentTime");
-let durationTime = document.getElementById("durationTime");
-let videoPlayerContainer = document.getElementById("playerFrame");;
+const el = function(selector) {
+   return document.querySelector(selector);
+}
+const container = el(".container"), 
+videoMedia = el("video"),
+videoTimeline = el(".videoTimeline"), 
+progressBar = el(".progressBar"), 
+volBtn = el(".volume i"), 
+volSlider = el(".volumeSlider"), 
+currentVidTime = el(".currentTime"), 
+videoDuration = el(".durationTime"), 
+skipBackwardBtn = el(".skipBackward i"), 
+skipForwardBtn = el(".skipForward i"), 
+playPauseBtn = el(".playPause i"), 
+stopBtn = el(".stop i"), 
+playbackSpeedBtn = el(".playbackSpeed i"), 
+speedOptions = el(".speedOptions"), 
+pipBtn = el(".picInPic i"), 
+fullscreenBtn = el(".fullscreen i");
+let timer;
 
-// Playback controls
-let prevBtn = document.getElementById("prev");
-let pausePlayBtn = document.getElementById("pausePlay");
-let nextBtn = document.getElementById("next");
-let stopBtn = document.getElementById("stop");
+// hide controls when video is paused
+const hideControls = function() {
+    if(videoMedia.paused) return;
+    timer = setTimeout(function () {
+        container.classList.remove("showControls");
+    }, 3000);
+}
+hideControls();
 
-// Media controls
-let fullScreenBtn = document.getElementById("fullscreen");
-let muteUnmuteBtn = document.getElementById("muteUnmute");
-let volControl = document.getElementById("volume");
-
-
-pausePlayBtn.addEventListener("click", pausePlayMedia);
-seekControl.addEventListener("change", seekVideo);
-prevBtn.addEventListener("click", prevMedia);
-nextBtn.addEventListener("click", nextMedia);
-stopBtn.addEventListener("click", stopVideo);
-playlistBtn.addEventListener("click", togglePlaylist);
-fullScreenBtn.addEventListener("click", toggleFullScreen);
-muteUnmuteBtn.addEventListener("click", toggleMute);
-volControl.addEventListener("change", controlVolume);
+// show controls when mouse hovers on the video
+container.addEventListener("mousemove", function() {
+    container.classList.add("showControls");
+    clearTimeout(timer);
+    hideControls();
+});
 
 
-// videoMedia.addEventListener("loadedmetadata", getVideoDuration);
-videoMedia.addEventListener("timeupdate", updateVideoProgressTime);
+const formatTime = function(time) {
+    let secs = Math.floor(time % 60),
+    mins = Math.floor(time / 60) % 60,
+    hours = Math.floor(time / 3600);
 
-// Play or pause the video
-function pausePlayMedia() {
-    if(videoMedia.paused || videoMedia.ended) {
-        videoMedia.play();
-        pausePlayBtn.innerHTML = "pause";
-    } else {
-        videoMedia.pause();
-        pausePlayBtn.innerHTML = "play";
+    secs = secs < 10 ? `0${secs}` : secs;
+    mins = mins < 10 ? `0${mins}` : mins;
+    hours = hours < 10 ? `0${hours}` : hours;
+
+    if (hours == 0) {
+        return `${mins}:${secs}`;
     }
+    return `${hours}:${mins}:${secs}`;
 }
 
-// toggle mute for the video
-function toggleMute() {
-    if(videoMedia.muted) {
-        videoMedia.muted = false;
-        // muteUnmuteBtn.innerHTML = "mute";
-        
-        // remove prev icon class before adding another
-        muteUnmuteBtn.className = "fa fa-volume-up";
-        volControl.value = 100;
-    } else {
-        videoMedia.muted = true;
-        // muteUnmuteBtn.innerHTML = "unmute";
-        // remove prev icon class before adding another
-        muteUnmuteBtn.className = "fa fa-volume-off";
-        volControl.value = 0;
-    }
+videoTimeline.addEventListener("mousemove", function(e) {
+    let timelineWidth = videoTimeline.clientWidth;
+    let offsetX = e.offsetX;
+    let percent = Math.floor((offsetX / timelineWidth) * videoMedia.duration);
+    const progressTime = videoTimeline.querySelector("span");
+    offsetX = offsetX < 20 ? 20: (offsetX > timelineWidth - 20) ? timelineWidth - 20 : offsetX;
+    progressTime.style.left = `${offsetX}px`;
+    progressTime.innerText = formatTime(percent);
+});
+
+videoTimeline.addEventListener("click", function(e) {
+    let timelineWidth = videoTimeline.clientWidth;
+    videoMedia.currentTime = (e.offsetX / timelineWidth) * videoMedia.duration;
+});
+
+videoMedia.addEventListener("timeupdate", function(e) {
+    let {current, duration} = e.target;
+    let percent = (this.currentTime / duration) * 100;
+    progressBar.style.width = `${percent}%`;
+    currentVidTime.innerText = formatTime(this.currentTime);
+});
+
+videoMedia.addEventListener("loadeddata", function() {
+videoDuration.innerText = formatTime(this.duration);
+});
+
+const draggableProgressBar = function(e) {
+    let timelineWidth = videoTimeline.clientWidth;
+    progressBar.style.width = `${e.offsetX}px`;
+    videoMedia.currentTime = (e.offsetX / timelineWidth) * videoMedia.duration;
+    currentVidTime.innerText = formatTime(videoMedia.currentTime);
 }
 
-// stop the video playback
-function stopVideo() {
+volBtn.addEventListener("click", function() {
+    if (!volBtn.classList.contains("fa-volume-up")) {
+        videoMedia.volume = 0.5;
+        volBtn.classList.replace("fa-volume-off", "fa-volume-up");
+    } else {
+        videoMedia.volume = 0.0;
+        volBtn.classList.replace("fa-volume-up", "fa-volume-off");
+    }
+    volSlider.value = videoMedia.volume;
+});
+
+speedOptions.querySelectorAll("li").forEach(function(option) {
+    option.addEventListener("click", function() {
+        videoMedia.playbackRate = option.dataset.speed;
+        speedOptions.querySelector(".active").classList.remove("active");
+        option.classList.add("active");
+    }); 
+});
+
+fullscreenBtn.addEventListener("click", function() {
+    container.classList.toggle("fullscreen");
+    if (document.fullscreenElement) {
+        fullscreenBtn.classList.replace("fa-compress", "fa-arrows-alt");
+        return document.exitFullscreen();
+    }
+    fullscreenBtn.classList.replace("fa-arrows-alt", "fa-compress");
+    container.requestFullScreen;
+});
+
+
+playbackSpeedBtn.addEventListener("click", function(){ speedOptions.classList.toggle("show") });
+
+pipBtn.addEventListener("click", function() { videoMedia.requestPictureInPicture() });
+
+skipBackwardBtn.addEventListener("click", function() { videoMedia.currentTime -=5 });
+
+skipForwardBtn.addEventListener("click", function() { videoMedia.currentTime +=5 });
+
+videoMedia.addEventListener("play", function() { playPauseBtn.classList.replace("fa-play", "fa-pause") });
+
+videoMedia.addEventListener("pause", function() { playPauseBtn.classList.replace("fa-pause", "fa-play") });
+
+playPauseBtn.addEventListener("click", function() { videoMedia.paused ? videoMedia.play() : videoMedia.pause() });
+
+videoTimeline.addEventListener("mousedown", function() { videoTimeline.addEventListener("mousemove", draggableProgressBar) });
+
+document.addEventListener("mouseup", function() { videoTimeline.removeEventListener("mousemove", draggableProgressBar) });
+
+stopBtn.addEventListener("click", function() {
     videoMedia.pause();
     videoMedia.currentTime = 0;
-}
+});
 
-function seekVideo() {
-    let seekTo = videoMedia.duration * (seekControl.value / 100);
-    videoMedia.currentTime = seekTo;
-}
-
-function prevMedia() {
-
-}
-
-function nextMedia() {
-    
-}
-
-function togglePlaylist() {
-
-}
-
-// Update time as the video plays
-function updateVideoProgressTime() {
-    let newTime = videoMedia.currentTime * (100 / videoMedia.duration);
-    seekControl.value = newTime;
-
-    let currentMins = Math.floor(videoMedia.currentTime / 60);
-    let currentSecs = Math.floor(videoMedia.currentTime - currentMins * 60);
-    let durationMins = Math.floor(videoMedia.duration / 60);
-    let durationSecs = Math.floor(videoMedia.duration - durationMins * 60);
-
-    if (currentSecs < 10) {
-        currentSecs = "0"+currentMins; // refactor using ES6 templates 
-    } 
-
-    if (durationSecs < 10) {
-        durationSecs = "0"+durationSecs; // refactor using ES6 templates 
-    } 
-
-    if (currentMins < 10) {
-        currentMins = "0"+currentMins; // refactor using ES6 templates 
-    } 
-
-    if (durationMins < 10) {
-        durationMins = "0"+durationMins; // refactor using ES6 templates 
-    } 
-
-    currentTime.innerHTML = currentMins+":"+currentSecs;
-    durationTime.innerHTML = durationMins+":"+durationSecs;
-}
-
-// toggle fullscreen function
-function toggleFullScreen() {
-    if (document.fullscreenElement !== null) {
-        // i.e the document is in fullscreen mode
-        document.exitFullscreen();
-        // setFullscreenData(false);
-    } else {
-        // i.e the document is not in fullscreen mode
-        videoPlayerContainer.requestFullscreen();
-        // setFullscreenData(true);
-    }
-}
-
-function controlVolume() {
-    // let currentVolume = Math.floor(videoMedia.volume * 10) / 10;
-    // volControl.value = currentVolume;
-    videoMedia.volume = volControl.value * 10 / 100;
-}
